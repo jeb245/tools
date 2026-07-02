@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mortgage Repayment Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #10254d;
+    --ink-soft: #3d4f75;
+    --ink-faint: #8a94ab;
+    --paper: #f7f6f2;
+    --card: #ffffff;
+    --line: #dcdcd4;
+    --accent: #2e5e4e;
+    --accent-tint: #e7efec;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Archivo', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 48px 20px 64px;
+  }
+  .wrap { width: 100%; max-width: 880px; }
+
+  header { margin-bottom: 40px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 10px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600; font-size: clamp(34px, 5vw, 48px);
+    line-height: 1.1;
+  }
+  .sub { color: var(--ink-soft); font-size: 15px; margin-top: 10px; max-width: 52ch; line-height: 1.6; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px;
+  }
+
+  .field { margin-bottom: 22px; }
+  .field:last-child { margin-bottom: 0; }
+  label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  select, input[type="number"], input[type="text"] {
+    width: 100%; height: 44px;
+    font: 500 16px 'Archivo', sans-serif;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 14px;
+    transition: border-color .15s;
+  }
+  select:focus, input[type="number"]:focus, input[type="text"]:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-tint);
+  }
+
+  .income-panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  .income-panel .panel-title {
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 4px;
+  }
+  .income-panel .panel-sub {
+    font-size: 13px; color: var(--ink-faint); margin-bottom: 14px;
+  }
+  .income-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+  .income-stats .stat { background: var(--paper); }
+  .v.positive { color: var(--accent); }
+  .v.negative { color: #a3392e; }
+  .hint { font-size: 12px; color: var(--ink-faint); margin-top: 6px; }
+
+  .slider-row { display: flex; align-items: center; gap: 14px; }
+  .slider-row output {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600; font-size: 15px; min-width: 64px; text-align: right;
+  }
+  input[type="range"] {
+    flex: 1; appearance: none; -webkit-appearance: none;
+    height: 4px; border-radius: 2px; background: var(--line); cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(16,37,77,.25);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--accent); border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(16,37,77,.25);
+  }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+
+  .result-hero {
+    background: var(--ink); color: #fff;
+    border-radius: 14px; padding: 30px 28px; margin-bottom: 20px;
+  }
+  .result-hero .label {
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #a7b2cc; font-weight: 500; margin-bottom: 8px;
+  }
+  .result-hero .figure {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: clamp(36px, 5.5vw, 52px);
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .result-hero .per { font-family: 'Archivo', sans-serif; font-size: 15px; color: #a7b2cc; font-weight: 400; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .stat .k { font-size: 12px; color: var(--ink-faint); margin-bottom: 4px; }
+  .stat .v { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .split { margin-top: 20px; }
+  .split .bar {
+    display: flex; height: 12px; border-radius: 6px; overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .split .principal { background: var(--accent); }
+  .split .interest { background: #c9a26b; }
+  .split .legend {
+    display: flex; justify-content: space-between; margin-top: 8px;
+    font-size: 12px; color: var(--ink-soft);
+  }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+  footer { margin-top: 36px; font-size: 12px; color: var(--ink-faint); line-height: 1.6; max-width: 62ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Repayment mortgage</p>
+    <h1>Mortgage calculator</h1>
+    <p class="sub">Enter the property price, your deposit, the term, and the interest rate. The monthly instalment updates as you type.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="Inputs">
+      <div class="field">
+        <label for="cur">Currency</label>
+        <select id="cur">
+          <option value="UGX" selected>UGX — Ugandan shilling</option>
+          <option value="GBP">GBP — British pound</option>
+          <option value="USD">USD — US dollar</option>
+          <option value="KES">KES — Kenyan shilling</option>
+          <option value="EUR">EUR — Euro</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="price">Property price</label>
+        <input type="text" id="price" inputmode="numeric" autocomplete="off" value="500,000,000">
+      </div>
+
+      <div class="field">
+        <label for="depositPct">Deposit</label>
+        <div class="slider-row">
+          <input type="range" id="depositPct" min="0" max="50" step="1" value="15">
+          <output id="depositPctOut" for="depositPct">15%</output>
+        </div>
+        <p class="hint" id="depAmt">—</p>
+      </div>
+
+      <div class="field">
+        <label for="term">Mortgage term</label>
+        <div class="slider-row">
+          <input type="range" id="term" min="1" max="35" step="1" value="25">
+          <output id="termOut" for="term">25 yrs</output>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rate">Interest rate (annual)</label>
+        <div class="slider-row">
+          <input type="range" id="rate" min="0.5" max="25" step="0.1" value="17.5">
+          <output id="rateOut" for="rate">17.5%</output>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Results">
+      <div class="result-hero">
+        <p class="label">Monthly instalment</p>
+        <p class="figure"><span id="monthly">—</span> <span class="per">/ month</span></p>
+      </div>
+
+      <div class="income-panel">
+        <p class="panel-title">Commercial property income</p>
+        <p class="panel-sub">Optional — if the property earns rent, enter its monthly income to see how it covers the instalment.</p>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 14px;">
+          <div class="field" style="margin-bottom:0;">
+            <label for="income">Monthly income</label>
+            <input type="text" id="income" inputmode="numeric" autocomplete="off" placeholder="e.g. 8,000,000">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="units">No. of units</label>
+            <input type="text" id="units" inputmode="numeric" autocomplete="off" placeholder="e.g. 12">
+          </div>
+        </div>
+        <div class="income-stats" id="incomeStats" style="display:none;">
+          <div class="stat"><p class="k">Net instalment</p><p class="v" id="netInst">—</p></div>
+          <div class="stat"><p class="k">Net monthly cashflow</p><p class="v" id="netCash">—</p></div>
+          <div class="stat"><p class="k">Rental cover</p><p class="v" id="cover">—</p></div>
+          <div class="stat" id="unitStat" style="display:none;"><p class="k">Income per unit</p><p class="v" id="perUnit">—</p></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><p class="k">Loan amount</p><p class="v" id="loan">—</p></div>
+        <div class="stat"><p class="k">Number of payments</p><p class="v" id="npay">—</p></div>
+        <div class="stat"><p class="k">Total interest</p><p class="v" id="totInt">—</p></div>
+        <div class="stat"><p class="k">Total repaid</p><p class="v" id="totRep">—</p></div>
+      </div>
+
+      <div class="split">
+        <div class="bar" aria-hidden="true">
+          <div class="principal" id="barP" style="width:50%"></div>
+          <div class="interest" id="barI" style="width:50%"></div>
+        </div>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--accent)"></span>Principal <strong id="pctP">—</strong></span>
+          <span><span class="dot" style="background:#c9a26b"></span>Interest <strong id="pctI">—</strong></span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Figures assume a standard repayment mortgage with a fixed rate and monthly compounding for the full term. They exclude arrangement fees, insurance, valuation costs, and rate changes — use them as a guide, not a quote.
+  </footer>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function fmt(v, cur) {
+    return new Intl.NumberFormat('en', {
+      style: 'currency',
+      currency: cur,
+      maximumFractionDigits: 0
+    }).format(v);
+  }
+
+  function parseNum(str) {
+    return Math.max(0, +String(str).replace(/[^0-9]/g, '') || 0);
+  }
+
+  function formatField(input) {
+    const digitsBeforeCaret = input.value
+      .slice(0, input.selectionStart)
+      .replace(/[^0-9]/g, '').length;
+    const digits = input.value.replace(/[^0-9]/g, '');
+    input.value = digits ? (+digits).toLocaleString('en') : '';
+    let pos = 0, count = 0;
+    while (pos < input.value.length && count < digitsBeforeCaret) {
+      if (/[0-9]/.test(input.value[pos])) count++;
+      pos++;
+    }
+    input.setSelectionRange(pos, pos);
+  }
+
+  function calc() {
+    const cur = $('cur').value;
+    const price = parseNum($('price').value);
+    const depPct = +$('depositPct').value;
+    const dep = Math.round(price * depPct / 100);
+    const years = +$('term').value;
+    const annualRate = +$('rate').value;
+
+    $('termOut').textContent = years + (years === 1 ? ' yr' : ' yrs');
+    $('rateOut').textContent = annualRate.toFixed(1) + '%';
+    $('depositPctOut').textContent = depPct + '%';
+    $('depAmt').textContent = price > 0
+      ? fmt(dep, cur) + ' deposit'
+      : 'Enter a property price';
+
+    const P = price - dep;
+    const n = years * 12;
+    const r = annualRate / 100 / 12;
+    const m = P <= 0 ? 0 : (r === 0 ? P / n : P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1));
+    const total = m * n;
+    const interest = total - P;
+
+    $('monthly').textContent = fmt(m, cur);
+    $('loan').textContent = fmt(P, cur);
+    $('npay').textContent = n.toLocaleString();
+    $('totInt').textContent = fmt(interest, cur);
+    $('totRep').textContent = fmt(total, cur);
+
+    const pctPrincipal = total > 0 ? P / total * 100 : 50;
+    $('barP').style.width = pctPrincipal.toFixed(1) + '%';
+    $('barI').style.width = (100 - pctPrincipal).toFixed(1) + '%';
+    $('pctP').textContent = Math.round(pctPrincipal) + '%';
+    $('pctI').textContent = Math.round(100 - pctPrincipal) + '%';
+
+    const income = parseNum($('income').value);
+    if (income > 0 && m > 0) {
+      const netInstVal = m - income;
+      const netInstEl = $('netInst');
+      netInstEl.textContent = netInstVal > 0 ? fmt(netInstVal, cur) : fmt(0, cur);
+      netInstEl.className = 'v ' + (netInstVal <= 0 ? 'positive' : '');
+
+      const net = income - m;
+      const netEl = $('netCash');
+      netEl.textContent = (net >= 0 ? '+' : '−') + fmt(Math.abs(net), cur);
+      netEl.className = 'v ' + (net >= 0 ? 'positive' : 'negative');
+      const coverEl = $('cover');
+      coverEl.textContent = (income / m).toFixed(2) + '×';
+      coverEl.className = 'v ' + (income / m >= 1 ? 'positive' : 'negative');
+
+      const units = parseNum($('units').value);
+      if (units > 0) {
+        $('perUnit').textContent = fmt(income / units, cur) + ' / mo';
+        $('unitStat').style.display = 'block';
+      } else {
+        $('unitStat').style.display = 'none';
+      }
+
+      $('incomeStats').style.display = 'grid';
+    } else {
+      $('incomeStats').style.display = 'none';
+    }
+  }
+
+  ['price', 'income', 'units'].forEach(id =>
+    $(id).addEventListener('input', e => { formatField(e.target); calc(); })
+  );
+  ['cur', 'depositPct', 'term', 'rate'].forEach(id =>
+    $(id).addEventListener('input', calc)
+  );
+  calc();
+</script>
+</body>
+</html>
